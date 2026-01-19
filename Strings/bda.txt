@@ -1,0 +1,765 @@
+// 1. Downloading and Installing Hadoop: Understanding different Hadoop
+modes. Startup scripts, Configuration files
+
+INSTALLATION PROCEDURE:
+Step 1: Install Java (OpenJDK 8)
+sudo apt update
+sudo apt install openjdk-8-jdk
+java -version
+Step 2: Install and Configure SSH
+sudo apt install ssh
+ssh-keygen -t rsa -P ""
+cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+ssh localhost
+Step 3: Download Hadoop
+wget https://downloads.apache.org/hadoop/common/hadoop-3.4.1/hadoop-3.4.1.tar.gz
+Step 4: Extract and Move Hadoop to Installation Directory
+tar -xzf hadoop-3.4.1.tar.gz
+sudo mv hadoop-3.4.1 /usr/local/hadoop
+Step 5: Open .bashrc for Environment Variable Configuration and add Hadoop and Java
+Environment Variables
+nano ~/.bashrc
+Add these lines at the bottom:
+export HADOOP_HOME=/usr/local/hadoop
+export HADOOP_INSTALL=$HADOOP_HOME
+export HADOOP_MAPRED_HOME=$HADOOP_HOME
+export HADOOP_COMMON_HOME=$HADOOP_HOME
+export HADOOP_HDFS_HOME=$HADOOP_HOME
+export HADOOP_YARN_HOME=$HADOOP_HOME
+export HADOOP_COMMON_LIB_NATIVE_DIR=$HADOOP_HOME/lib/native
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+export JAVA_HOME=$(readlink -f /usr/bin/java | sed "s:/bin/java::")
+export HADOOP_HOME=/usr/local/hadoop
+export PATH=$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Step 6: Apply Changes to .bashrc
+source ~/.bashrc
+Step 7: Navigate to Hadoop Configuration Directory
+cd $HADOOP_HOME/etc/hadoop
+Step 8: Configure core-site.xml
+nano core-site.xml
+Add these lines at the bottom:
+<configuration>
+<property>
+<name>fs.defaultFS</name>
+<value>hdfs://localhost:9000</value>
+</property>
+</configuration>
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Step 9: Configure hdfs-site.xml
+nano hdfs-site.xml
+Add these lines at the bottom:
+<configuration>
+<property>
+<name>dfs.replication</name>
+<value>1</value>
+</property>
+<property>
+<name>dfs.namenode.name.dir</name>
+<value>file:///usr/local/hadoop/hdfs/namenode</value>
+</property>
+<property>
+<name>dfs.datanode.data.dir</name>
+<value>file:///usr/local/hadoop/hdfs/datanode</value>
+</property>
+</configuration>
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Step 10: Configure mapred-site.xml
+nano mapred-site.xml
+Add these lines at the bottom:
+<configuration>
+<property>
+<name>mapreduce.framework.name</name>
+<value>yarn</value>
+</property>
+</configuration>
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Step 11: Configure yarn-site.xml
+nano yarn-site.xml
+Add these lines at the bottom:
+<configuration>
+<property>
+<name>yarn.nodemanager.aux-services</name>
+<value>mapreduce_shuffle</value>
+</property>
+</configuration>
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Step 12: Set JAVA_HOME in hadoop-env.sh
+nano hadoop-env.sh
+Add this line at the bottom:
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Step 13: Format the Hadoop NameNode
+hdfs namenode -format
+Step 14: Start HDFS Services
+start-dfs.sh
+Step 15: Start 
+
+
+
+// 2. Hadoop Implementation of file management tasks, such as Adding files
+and directories, Retrieving files and Deleting files
+
+SYNTAX, COMMANDS AND EXECUTION PROCEDURE:
+Step-1: Start Hadoop services
+:~$ start-all.sh #Starts NameNode, Data Node, ResourceManager, and NodeManager daemons
+Step-2: Verify Hadoop Daemons are running
+:~$ jps
+Step-3: List All Files in HDFS Root Directory
+:~$ hadoop fs -ls/
+Step-4: Create New Directories in HDFS
+:~$ hadoop fs -mkdir /user :~$ hadoop fs -mkdir /user/sample1 :~$ hadoop fs -mkdir /user/sample2 :~$ hadoop fs -ls /user/ # Create a directory named 'user'
+# Create a subdirectory 'sample1' under /user
+# Create a subdirectory 'sample2' under /user
+# Verify the created directories
+It will show
+Found 2 items
+drwx-xr-x - 1 yourusername supergroup XX Date HH:MM /user/sample1
+drwx-xr-x - 1 yourusername supergroup XX Date HH:MM /user/sample2
+Step-5: Create a New File Locally and Add Content
+:~$ echo “This is the new file” >ex.txt (Or) manually edit and save:
+: ~$ nano ex.txt
+# Create a new file with content
+# Enter content, e.g.: This is the new file
+Step-6: Upload the Local File to HDFS
+: ~$ hadoop fs -put ex.txt /user/sample1
+Step-7: Verify File Upload to HDFS Directory
+:~$ hadoop fs -ls /user/sample1/ It will show
+Found 1 item
+# Verify the uploaded file
+drwx-xr-x - 1 yourusername supergroup XX Date HH:MM /user/sample1/ex.txt
+Step-8 : View the contents of the File Stored in HDFS i.e. Retrieve the file
+:~$ hadoop fs -cat /user/sample1/ex.txt
+# Displays the content: This is the new file
+Step-9 : Delete the File from HDFS
+: ~$ hadoop fs -rm /user/sample1/ex.txt
+: ~$ hadoop fs -ls /user/sample1/ # Confirm deletion
+
+// 3. Implementation of Matrix Multiplication with Hadoop MapReduce
+
+JAVA PROGRAM FOR MAPPER:
+MatrixMapper.Java :
+package matrixmultiplication;
+import java.io.IOException;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.Mapper;
+public class MatrixMapper extends Mapper<LongWritable, Text, Text, Text> {
+private static final int MATRIX_SIZE = 2; // Adjust this to match your matrix dimensions
+@Override
+public void map(LongWritable key, Text value, Context context) throws IOException,
+InterruptedException {
+// Splitting the input line into its components
+String[] tokens = value.toString().split(",");
+String matrixName = tokens[0]; // Matrix A or B
+int i = Integer.parseInt(tokens[1]); // Row index for matrix A or column index for matrix B
+int j = Integer.parseInt(tokens[2]); // Column index for matrix A or row index for matrix B
+int v = Integer.parseInt(tokens[3]); // Value in the matrix cell
+if (matrixName.equals("A")) {
+// For each column (k) in the resulting matrix C, emit key (i,k) and the value (A,j,v)
+for (int k = 0; k < MATRIX_SIZE; k++) {
+context.write(new Text(i + "," + k), new Text("A," + j + "," + v));
+}
+} else if (matrixName.equals("B")) {
+// For each row (k) in the resulting matrix C, emit key (k,j) and the value (B,i,v)
+for (int k = 0; k < MATRIX_SIZE; k++) {
+context.write(new Text(k + "," + j), new Text("B," + i + "," + v));
+}
+}
+}
+}
+
+JAVA PROGRAM FOR REDUCER:
+MatrixReducer.Java
+package matrixmultiplication;
+import java.io.IOException;
+import java.util.HashMap;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.Reducer;
+public class MatrixReducer extends Reducer<Text, Text, Text, IntWritable> {
+@Override
+public void reduce(Text key, Iterable<Text> values, Context context) throws IOException,
+InterruptedException {
+// HashMaps to hold values for matrix A and B
+HashMap<Integer, Integer> A_map = new HashMap<>();
+HashMap<Integer, Integer> B_map = new HashMap<>();
+// Iterate through values for this key (i,k) or (k,j) and categorize them into A_map or B_map
+for (Text val : values) {
+String[] tokens = val.toString().split(",");
+String matrix = tokens[0]; // Either A or B
+int index = Integer.parseInt(tokens[1]); // j for A or i for B
+int value = Integer.parseInt(tokens[2]); // Matrix value
+if (matrix.equals("A")) {
+A_map.put(index, value); // Store A values, indexed by j
+} else if (matrix.equals("B")) {
+B_map.put(index, value); // Store B values, indexed by i
+}
+}
+//Compute the dot product of the corresponding row from matrix A and column from matrix B
+int result = 0;
+for (int j : A_map.keySet()) {
+if (B_map.containsKey(j)) {
+result += A_map.get(j) * B_map.get(j); // Multiply corresponding elements and sum
+}
+}
+// Emit the final result for this key (i,j)
+context.write(key, new IntWritable(result));
+}
+}
+
+JAVA PROGRAM FOR DRIVER:
+MatrixMultiplication.Java :
+package matrixmultiplication;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.*;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+public class MatrixMultiplication {
+public static void main(String[] args) throws Exception {
+if (args.length != 2) {
+System.err.println("Usage: MatrixMultiplication <input path> <output path>");
+System.exit(-1);
+}
+Configuration conf = new Configuration();
+Job job = Job.getInstance(conf, "Matrix Multiplication");
+job.setJarByClass(MatrixMultiplication.class);
+job.setMapperClass(MatrixMapper.class);
+job.setReducerClass(MatrixReducer.class);
+job.setMapOutputKeyClass(Text.class);
+job.setMapOutputValueClass(Text.class);
+job.setOutputKeyClass(Text.class);
+job.setOutputValueClass(IntWritable.class);
+FileInputFormat.addInputPath(job, new Path(args[0]));
+FileOutputFormat.setOutputPath(job, new Path(args[1]));
+System.exit(job.waitForCompletion(true) ? 0 : 1);
+}
+}
+
+/*
+OUTPUT:
+0,0 17
+0,1 23
+1,0 39
+1,1 53
+*/
+
+// 4. Run a basic WordCount MapReduce program to understand
+MapReduce Paradigm
+
+SYNTAX, COMMANDS AND EXECUTION PROCEDURE:
+Step 1: Start hadoop services
+$ startall.sh
+$ jps
+Step 2: Create one directory (say wordcount)
+$ mkdir ~/wordcount
+$ cd ~/wordcount
+command prompt will be changed to ~wordcount$
+Step 3: Save the Java program for word count
+Inside the wordcount directory, create WordCount.java:
+~wordcount$ nano WordCount.java
+Copy-paste the WordCount.java code into it, then save and exit
+(For save, press Ctrl O then press Enter, For exit press Ctrl X)
+Step 4: Save the input file
+In the same wordcount directory, create a input text file: input.txt
+~wordcount$ nano input.txt
+Now, put the input content into it.
+Example content:
+Hadoop is a framework.
+Hadoop MapReduce processes Big Data efficiently.
+Hadoop is scalable and distributed.
+save and exit.
+Step 5: Create the wordcount_classes directory (for compiled .class files):
+~wordcount$ mkdir wordcount_classes
+Step 6: Compile the Java code
+Still inside ~/wordcount:
+~wordcount$ javac -classpath `hadoop classpath` -d wordcount_classes WordCount.java
+Step 7: Package into a JAR
+~wordcount$ jar -cvf wordcount.jar -C wordcount_classes/ .
+Step 8: Upload Input File to Hadoop environment
+Input file is already available in the wordcount directory
+i) Create a wcinput1 directory in HDFS
+$ hadoop fs -mkdir /wcinput1
+ii) Upload the local file input.txt from the wordcount directory into
+/wcinput1/ on HDFS.
+$ hadoop fs -put ~/wordcount/input.txt /wcinput1/
+iii) To confirm the upload:
+$ hadoop fs -ls /wcinput1/
+It should show
+Found 1 items
+-rw-r--r-- 1 yourusername supergroup XX Date HH:MM /wcinput1/input.txt
+Step 9: Run the WordCount job :
+$ cd wordcount
+~wordcount$ hadoop jar wordcount.jar WordCount /wcinput1 /wcoutput1
+(wcoutput1 will be the directory where the output stores. wcoutput1 will be created automatically.)
+Step 10: Check WordCount Output in HDFS
+I) List the Output Files:
+~wordcount$ hadoop fs -ls /wcoutput1/
+It will show
+Found 2 items
+-rw-r--r-- 1 yourusername supergroup XX Date HH:MM /wcoutput1/_SUCCESS
+-rw-r--r-- 1 yourusername supergroup XX Date HH:MM /wcoutput1/part-r-00000
+part-r-00000 is the output file.
+_SUCCESS just indicates that the job completed successfully.
+ii) View the Output Content:
+~wordcount$ hadoop fs -cat /wcoutput1/part-r-00000
+
+/*
+OUTPUT:
+Big 1
+Data 1
+Hadoop 3
+MapReduce 1
+a 1
+and 1
+distributed. 1
+efficiently. 1
+framework. 1
+is 2
+processes 1
+scalable 1
+*/
+
+// 5. Implementation of Kmeans Clustering using MapReduce
+
+JAVA PROGRAM FOR MAPPER:
+KMeansSimpleMapper.java
+import java.io.IOException;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Mapper;
+public class KMeansSimpleMapper extends Mapper<Object, Text, Text, Text> {
+public void map(Object key, Text value, Context context) throws IOException,
+InterruptedException {
+// Each line is "x,y"
+String[] point = value.toString().split(",");
+double x = Double.parseDouble(point[0]);
+double y = Double.parseDouble(point[1]);
+// Hard-coded centroids (for example: 2 centroids)
+double[][] centroids = {{1, 1}, {5, 4}};
+double minDist = Double.MAX_VALUE;
+String nearest = "";
+for (double[] centroid : centroids) {
+double dist = (x - centroid[0]) * (x - centroid[0]) + (y - centroid[1]) * (y - centroid[1]);
+if (dist < minDist) {
+minDist = dist;
+nearest = centroid[0] + "," + centroid[1];
+}
+}
+context.write(new Text(nearest), value); // Emit: (centroid) -> (point)
+}
+}
+
+JAVA PROGRAM FOR REDUCER:
+KMeansSimpleReducer.java
+import java.io.IOException;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Reducer;
+public class KMeansSimpleReducer extends Reducer<Text, Text, Text, Text> {
+public void reduce(Text key, Iterable<Text> values, Context context) throws IOException,
+InterruptedException {
+double sumX = 0, sumY = 0;
+int count = 0;
+for (Text val : values) {
+String[] point = val.toString().split(",");
+sumX += Double.parseDouble(point[0]);
+sumY += Double.parseDouble(point[1]);
+count++;
+}
+double newX = sumX / count;
+double newY = sumY / count;
+context.write(null, new Text(newX + "," + newY));
+}
+}
+
+JAVA PROGRAM FOR DRIVER:
+KMeansSimpleDriver.java
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+public class KMeansSimpleDriver {
+public static void main(String[] args) throws Exception {
+Configuration conf = new Configuration();
+Job job = Job.getInstance(conf, "Simple KMeans");
+job.setJarByClass(KMeansSimpleDriver.class);
+job.setMapperClass(KMeansSimpleMapper.class);
+job.setReducerClass(KMeansSimpleReducer.class);
+job.setOutputKeyClass(Text.class);
+job.setOutputValueClass(Text.class);
+FileInputFormat.addInputPath(job, new Path(args[0])); // Input points
+FileOutputFormat.setOutputPath(job, new Path(args[1])); // Output
+System.exit(job.waitForCompletion(true) ? 0 : 1);
+}
+}
+
+SYNTAX, COMMANDS AND EXECUTION PROCEDURE:
+Pre-Requisite : Ensure the required properties in mapred-site.xml
+$ sudo nano $HADOOP_HOME/etc/hadoop/mapred-site.xml
+Step 1: Start hadoop services
+$ startall.sh $ jps # Start NameNode, DataNode, ResourceManager, and NodeManager
+# Verify that Hadoop daemons are running
+Step 2: Create a working directory (say SimpleKMeans)
+$ mkdir SimpleKMeans
+$ cd SimpleKMeans
+command prompt will be changed to ~SimpleKMeans$
+Step 3: Save the three Java files in the SimpleKMeans directory
+SimpleKMeans$ nano KmeansSimpleMapper.java
+SimpleKMeans$ nano KMeansSimpleReducer.java
+SimpleKMeans$ nano KmeansSimpleDriver.java
+Write or paste the corresponding Java codes, then save and exit.
+Step 4: Create an input file in the SimpleKMeans directory
+SimpleKMeans$ nano points .txt
+Add the following sample content:
+1,1
+2,1
+4,3
+5,4
+6,5
+Save and exit.
+Step 5: Create a directory (say simple_classes) for compiled classes
+SimpleKMeans$ mkdir simple_classes
+Step 6: Compile the Java Program
+SimpleKMeans$ javac -classpath `hadoop classpath` -d simple_classes *.java
+This compiles the program and stores the .class files inside the simple_classes directory.
+Step 7: Package the compiled Class into a JAR
+SimpleKMeans$ jar -cvf simple_kmeans.jar -C simple_classes/ .
+Step 8: Upload the Input File to HDFS
+i) Create an input directory(say input) in HDFS
+SimpleKMeans$ cd
+$ hadoop fs -mkdir /input
+ii) Upload the local file points.txt to HDFS.
+$ hadoop fs -put ~/SimpleKMeans/points.txt /input/
+iii) Confirm the file upload:
+$ hadoop fs -ls /input/
+Expected output:
+Found 1 items
+-rw-r--r-- 1 yourusername supergroup XX Date HH:MM /input/points.txt
+Step 9: Run the SimpleKMeans MapReduce job :
+$ hadoop jar ~/SimpleKMeans/simple_kmeans.jar KMeansSimpleDriver /input/points.txt
+/output
+(Note: /output1 will be created automatically to store the output.)
+Step 10: Check the Output in HDFS
+i) List the Output Files:
+$ hadoop fs -ls /output/
+Expected output:
+Found 2 items
+-rw-r--r-- 1 yourusername supergroup XX Date HH:MM /output/_SUCCESS
+-rw-r--r-- 1 yourusername supergroup XX Date HH:MM /output/part-r-00000
+part-r-00000 is the output file.
+_SUCCESS just indicates that the job completed successfully.
+
+/*
+OUTPUT:
+The new centroids:
+1.5,1.0
+5.0,4.0
+*/
+
+// 6. Installation of Hive along with practice examples
+
+INSTALLATION PROCEDURE:
+Prerequisites : Ensure that
+ Java installed
+ Hadoop installed and running (Hive runs on top of Hadoop)
+Step 1: Download and Install Hive
+$ sudo wget https://archive.apache.org/dist/hive/hive-3.1.3/apache-hive-3.1.3-bin.tar.gz
+Step 2: Create the correct directory
+$ sudo mkdir -p /usr/local/hive
+Step 3: Extract Hive directly to /usr/local/hive
+$ sudo tar -xvzf apache-hive-3.1.3-bin.tar.gz -C /usr/local/hive –strip-components=1
+Step 4: Set Environment Variables
+$ nano ~/.bashrc
+Add at the bottom:
+# Hive Environment
+export HIVE_HOME=/usr/local/hive
+export PATH=$PATH:$HIVE_HOME/bin
+export HIVE_CONF_DIR=$HIVE_HOME/conf
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Apply changes:
+$ source ~/.bashrc
+Step 5: Start hadoop services
+$ startall.sh # Start NameNode, DataNode, ResourceManager, and NodeManager
+$ jps # Verify that Hadoop daemons are running
+Step 6: Create Hive warehouse directory on HDFS
+hadoop fs -mkdir /user
+hadoop fs -mkdir /user/hive
+hadoop fs -mkdir /user/hive/warehouse
+Step 7: Check Directory Creation
+Now to verify that the directories are properly created in HDFS:
+$ hadoop fs -ls /user/hive
+Expected output:
+drwxr-xr-x - user supergroup XX Date HH:MM /user/hive/warehouse
+Step 8: Initialize Hive Metastore
+$ schematool -dbType derby -initSchema
+It sets up Hive’s internal database (Derby DB by default).
+Step 9: Start Hive Shell
+$ hive
+This will bring up the Hive shell where the queries can be run.
+Step 10:Create a new database (say mydb):
+hive> CREATE DATABASE mydb;
+Use the newly created database:
+hive> USE mydb;
+Step 11: Create a Table in Hive
+Create a table to store employee data.
+hive> CREATE TABLE employees (
+id INT,
+name STRING,
+age INT,
+city STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE;
+Step 12: Exit the hive shell and enter into the terminal
+use CTRL+D to exit hive shell and enter into the terminal
+Step 13: Create a CSV file containing the employee data:
+$ cat > ~/employees.csv
+Enter the following data
+1,John,30,Chennai
+2,Mahesh,25,Madurai
+3,Ram,35,Trichy
+4,Babu,28,Kanchipuram
+(use CTRL+D to save and exit):
+Step 14: Upload the CSV file to HDFS (the Hive warehouse directory):
+$ hadoop fs -put ~/employees.csv /user/hive/warehouse/
+Step 15: Start Hive Shell again
+$ hive
+hive> USE mydb;
+Step 16: Load Data into the Hive Table
+Hive> LOAD DATA INPATH '/user/hive/warehouse/employees.csv' INTO TABLE employees;
+Step 17: Verify the Data is Loaded in the table
+hive> SELECT * FROM employees;
+
+/*
+OUTPUT:
+1 John 30 Chennai
+2 Mahesh 25 Madurai
+3 Ram 35 Trichy
+4 Babu 28 Kanchipuram
+*/
+
+// 7a. Installation of Hbase along with practice examples
+INSTALLATION PROCEDURE:
+Prerequisites :
+Ensure the following are installed on your system:
+ Java (JDK 8 or 11 is recommended)
+ SSH (optional for pseudo-distributed mode)
+ Hadoop (optional; HBase can run in standalone mode without it)
+Step 1: Download Hbase
+$ wget https://archive.apache.org/dist/hbase/2.5.6/hbase-2.5.6-bin.tar.gz
+Step 2: Create Installation Directory
+$ sudo mkdir -p /usr/local/hbase
+Step 3: Extract HBase to the Installation Directory
+$ sudo tar -xvzf hbase-2.5.6-bin.tar.gz -C /usr/local/hbase –strip-components=1
+Step 4: Set Environment Variables
+Edit the ~/.bashrc file:
+$ nano ~/.bashrc
+Add the following lines at the bottom:
+export HBASE_HOME=/usr/local/hbase
+export PATH=$PATH:$HBASE_HOME/bin
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Apply the changes:
+$ source ~/.bashrc
+Step 5: Create HBase Data Directories
+$ sudo mkdir -p /usr/local/hbase/hbase_data
+$ sudo mkdir -p /usr/local/hbase/zookeeper
+Step 6: Configure hbase-site.xml
+Edit the configuration file:
+$ sudo nano /usr/local/hbase/conf/hbase-site.xml
+Replace its contents with:
+<?xml version="1.0"?>
+<configuration>
+<property>
+<name>hbase.cluster.distributed</name>
+<value>false</value>
+</property>
+<property>
+<name>hbase.tmp.dir</name>
+<value>./tmp</value>
+</property>
+<property>
+<name>hbase.unsafe.stream.capability.enforce</name>
+<value>false</value>
+</property>
+<property>
+<name>hbase.rootdir</name>
+<value>file:///usr/local/hbase/hbase_data</value>
+</property>
+<property>
+<name>hbase.zookeeper.property.dataDir</name>
+<value>/usr/local/hbase/zookeeper</value>
+</property>
+</configuration>
+Save and exit (Ctrl + O, Enter, Ctrl + X).
+Step 7: Start HBase
+sudo JAVA_HOME=$JAVA_HOME $HBASE_HOME/bin/start-hbase.sh
+Step 8: Open HBase Shell
+$HBASE_HOME/bin/hbase shell
+Check if HBase is Running:
+In the shell prompt type status:
+hbase> status
+Expected output:
+1 active master, 0 backup masters, 1 servers, 0 dead, 2.0000 average load
+Optional: Check Web UI
+If running locally, open:
+ Master UI: http://localhost:16010
+Step 9: Create a Table
+Example: Create a table named students with a column family info:
+hbase> create 'students', 'info'
+Step 10: List Tables
+To verify that the table was created:
+hbase> list
+Expected output:
+TABLE
+students
+1 row(s)
+Step 11: Insert Data into Table
+Example: Add a student record:
+hbase> put 'students', 'row1', 'info:name', 'Arun'
+hbase> put 'students', 'row1', 'info:age', '21'
+hbase> put 'students', 'row2', 'info:name', 'Balan'
+hbase> put 'students', 'row2', 'info:age', '22'
+Step 12: Read/Verify Data
+To get data for a specific row:
+hbase> get 'students', 'row1'
+To scan the whole table:
+hbase> scan 'students'
+Step 13: Exit Shell
+hbase> exit
+
+/*
+OUTPUT:
+Row Name Age
+row1 Arun 21
+row2 Balan 22
+*/
+
+// 7b. Installation of Apache Thrift
+INSTALLATION PROCEDURE:
+Step 1: Install Prerequisites
+Update the package list and install required development tools:
+$ sudo apt update
+$ sudo apt install -y git automake bison flex g++ libevent-dev \
+libtool make pkg-config libssl-dev
+Step 2: Install Java Libraries
+Install Java Development Kit and Apache Ant:
+$ sudo apt install -y openjdk-8-jdk ant
+Step 3: Clone the Apache Thrift Repository
+Clone the Thrift source code from GitHub:
+$ git clone https://github.com/apache/thrift.git
+Step 4: Install Python Build Dependencies
+Install Python utilities required for building Thrift:
+$ sudo apt install python3-distutils
+$ sudo apt install python3-setuptools
+Step 5: Build and Install Thrift
+Navigate into the cloned repository and build Thrift:
+$ cd thrift
+thrift$ ./bootstrap.sh
+thrift$ ./configure
+thrift$ make -j$(nproc)
+Step 6: Install Thrift Compiler
+Install the Thrift compiler:
+thrift$ sudo apt install thrift-compiler
+Step 7: Verify the Installation
+Check the installed version of Thrift:
+thrift$ thrift --version
+
+/*
+OUTPUT:
+Upon successful installation, the version of Thrift will be displayed,
+Thrift version 0.13.0
+*/
+
+// 8. Practice Importing and Exporting data from various databases
+
+A) MySQL Operations
+INSTALLATION PROCEDURE:
+Step 1: Install MySQL Server
+$ sudo apt update
+$ sudo apt install mysql-servers
+Step 2: Secure MySQL Installation
+$ sudo mysql_secure_installation
+Follow the on-screen prompts to set the root password and secure the installation.
+Step 3: Login and Set Root Password
+$ sudo mysql
+Inside MySQL prompt:
+mysql> ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY
+'new_password';
+mysql> EXIT;
+Re-login with the new password:
+$ mysql -u root -p
+Enter password: new_password
+Step 4: Create a Database and Insert Data
+mysql> CREATE DATABASE new_company;
+mysql> USE new_company;
+Create table and insert records:
+mysql> CREATE TABLE employees (
+id INT PRIMARY KEY,
+name VARCHAR(50),
+age INT,
+city VARCHAR(50)
+);
+mysql> INSERT INTO employees (id, name, age, city)
+VALUES (1, 'John Doe', 30, 'New York'),
+(2, 'Jane Smith', 25, 'Los Angeles'),
+(3, 'Michael Johnson', 35, 'Chicago');
+Step 5: View Data
+mysql> SELECT * FROM employees;
+
+/*
+MySQL OUTPUT:
+
+| id | name | age | city |
+
+| 1 | John Doe | 30 | New York |
+| 2 | Jane Smith | 25 | Los Angeles |
+| 3 | Michael Johnson | 35 | Chicago |
+*/
+
+B) Hive Operations
+INSTALLATION PROCEDURE:
+Prerequisites :
+Ensure that Hadoop and Hive are pre-installed and configured
+Step 1: Start Hive CLI
+$ hive
+Step 2: Create Database and Use It
+hive> CREATE DATABASE mydb;
+hive> USE mydb;
+Step 3: Create Table in Hive
+hive> CREATE TABLE employees (
+id INT,
+name STRING,
+age INT,
+city STRING
+)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ','
+STORED AS TEXTFILE;
+Step 4: Load Data into Hive Table
+Assuming a file employees.csv exists with the following content:
+1,John,30,Chennai
+2,Mahesh,25,Madurai
+3,Ram,35,Trichy
+4,Babu,28,Kanchipuram
+Copy the file to HDFS and load it into the Hive table:
+$ hadoop dfs -mkdir -p /user/hive/warehouse/input
+$ hadoop dfs -put employees.csv /user/hive/warehouse/input/
+hive> LOAD DATA INPATH '/user/hive/warehouse/input/employees.csv' INTO TABLE
+employees;
+Step 5: View Data
+hive> SELECT * FROM employees;
+
+/*
+Hive OUTPUT:
+
+| id | name | age | city |
+
+| 1 | John | 30 | Chennai |
+| 2 | Mahesh | 25 | Madurai |
+| 3 | Ram | 35 | Trichy |
+| 4 | Babu | 28 | Kanchipuram |
+
+*/

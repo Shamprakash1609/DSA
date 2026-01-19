@@ -1,0 +1,33 @@
+Company name : Cognizant 
+Mode : mixed
+
+Total rounds : 4
+1. Communication Assessment Round(online) - simliar to amcat -- platform MSB
+Reading 
+Grammar and Comprehension
+Listening and Speaking
+
+2. Quants + Game Based Round(online 30 questions )( platform safe exam browser) - mostly profit loss , Distance time , percentages ,Averages
+Ratio & Proportion and 4 Data interpretation questions 
+
+Quantitative Aptitude
+Game Based Aptitude -- easy memory games tutorial available on youtube
+
+3. Technical Assessment (in campus with own laptops)
+Coding 1 - 2 sql(easy - based on basic sql , String operations , Date time medium - join based , subquery based)
+Coding 2 - both easy (2 questions arrays , strings)
+10 MCQS - based on python cluster 
+
+
+4. Final Technical HR conversation 
+- self intro 
+- 1 or 2 coding question - for me asked frequecy count of a example string and and Array 
+- core python or java or C# questions based on cluster choosen of the available 3
+- Sql based question 
+- Cloud based questions
+- passing coding question guarentees offer
+
+no Genral HR - offer finalization in Superset 
+
+advice from my side - practice more on basics and core stuff and Strong at sql and cluster preffred
+
