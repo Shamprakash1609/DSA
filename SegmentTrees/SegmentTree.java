@@ -78,13 +78,36 @@ public class SegmentTree {
 
     private int query(Node node , int qsi , int qei){
         // If node interval is entirely within query interval, return node's sum
+        /*  case1 : Completely Inside
+            qs ----------- qe
+                    L ----- R
+
+            -> L >= qs  AND  R <= qe
+        */
         if(node.startInterval >= qsi && node.endInterval <= qei){ // Completely Inside 
             return node.data;
         }
-        else if(node.startInterval >  qei || node.endInterval < qsi){
-            //  Completely Outside the interval
+        /*  case 2 : Completely Outside the interval
+            qs ----- qe          (OR)          qs ----- qe
+                       L ----- R      L ----- R
+            
+            -> R < qs  OR  L > qe
+        */
+        else if(node.startInterval >  qei || node.endInterval < qsi){ //  Completely Outside the interval
+            
             return 0;
         }
+        /* case 3 : Partial overlap
+            qs ----------- qe
+                    L ------------- R
+
+                (OR)
+            
+                    qs ----------- qe
+            L ------------- R
+
+            NOT(total overlap) AND NOT(no overlap)
+        */
         else{ // If node interval partially overlaps query interval, sum left and right children
             int leftSum = this.query(node.left, qsi, qei);
             int rightSum = this.query(node.right, qsi, qei);
