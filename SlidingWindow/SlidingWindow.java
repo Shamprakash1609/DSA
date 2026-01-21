@@ -44,13 +44,31 @@ public class SlidingWindow {
      *              r++;
      *          }
      * 
+     *          pattern :
+     *              expand right
+     *              update frequency map
+     *              while invalid:
+     *                   shrink left
+     *              update answer
+     * 
+     * 
      * 3) Counting Subarrays with Exact Condition (Constant Condition)
      *    - Use when you need the number of subarrays/substrings with an exact property (e.g., sum == k).
      *    - Approach: Use the difference between two sliding window counts.
      *      - f1 = number of subarrays where sum <= k
      *      - f2 = number of subarrays where sum <= k-1
      *      - Result = f1 - f2 (gives number of subarrays with sum == k)
+     *      
+     *      intution : (set difference idea)
+     *          let :
+     *          A = all subarrays with sum ≤ K
+     *          B = all subarrays with sum ≤ K−1
+     *          
+     *          Then:
+     *              Every subarray in B is also in A
+     *              The only subarrays in A but NOT in B are those with sum == K
      * 
+     *
      * 4) Minimum Window Substring/Array
      *    - Use when you need the smallest window that satisfies a condition (e.g., contains all characters of t).
      *    - Steps:
@@ -133,7 +151,6 @@ public class SlidingWindow {
         }
 
         return maxLen;
-
     }
 
     public static int lengthOfLongestSubstring_O(String s) {
@@ -312,7 +329,7 @@ public class SlidingWindow {
         return maxLen;
     }
 
-    public static int longestkSubstr_O(String s, int k) {
+    public static int longestkSubstr_O(String s, int k) { 
         // TC: O(N) SC: O(1) since the number of distinct characters is limited
         int n = s.length();
         
@@ -324,7 +341,7 @@ public class SlidingWindow {
         
         while(r < n){
           
-            mpp.put(s.charAt(r) , mpp.getOrDefault(s.charAt(r) , 0) + 1 );
+            mpp.put(s.charAt(r) , mpp.getOrDefault(s.charAt(r) , 0) + 1);
             
             if(mpp.size() > k){
                 if(mpp.containsKey(s.charAt(l))){
@@ -432,6 +449,7 @@ public class SlidingWindow {
             else c = i;
 
             if(a != -1 && b != -1 && c != -1 ){
+                // With Every Character that Ends - also starts that you may know already 
                 cnt += Math.min(a , Math.min(b , c)) + 1;
             }
         }
@@ -571,6 +589,7 @@ public class SlidingWindow {
                 l++;
             }
 
+            // the element individually is as subarray and element combined with left elements
             cnt += (r - l + 1);
             r++;
             
@@ -776,42 +795,45 @@ public class SlidingWindow {
 
     // Permutation in String
     public static boolean checkInclusion(String s1, String s2) {
-        int n = s1.length() , m = s2.length();
+        int n = s1.length();
+        int m = s2.length();
 
         if(m < n) return false;
 
         int hash[] = new int[26];
 
-        for(int i = 0 ; i < n; i++){
+        for(int i = 0 ; i < n ; i++){
             hash[s1.charAt(i) - 'a']++;
         }
 
-        int charCnt = n;
-
         int l = 0 , r = 0;
 
-        while(r < m){
-            
-            // Expand
-            if (hash[s2.charAt(r) - 'a'] > 0) {
-                charCnt--;
+        int charCnt = 0;
+
+        for(r = 0 ; r < n ; r++){
+            if(hash[s2.charAt(r) - 'a'] > 0){
+                charCnt++;
             }
             hash[s2.charAt(r) - 'a']--;
-            r++;
+        }
 
-            // Check
-            if (charCnt == 0) return true;
+        if(charCnt == n) return true;
 
-            // Shrink 
-            if (r - l == n) {
-                if (hash[s2.charAt(l) - 'a'] >= 0) {
-                    charCnt++;
-                }
+        while(r < m){
+            if(hash[s2.charAt(r) - 'a'] > 0){
+                charCnt++;
+            }
+            hash[s2.charAt(r) - 'a']--;
+
+            if(r - l + 1 > n){
                 hash[s2.charAt(l) - 'a']++;
+                if(hash[s2.charAt(l) - 'a'] > 0) charCnt--;
                 l++;
             }
 
-            
+            if(charCnt == n) return true;
+
+            r++;
         }
 
         return false;
@@ -904,6 +926,104 @@ public class SlidingWindow {
         return maxLen;
     }
 
+    // Repeated DNA Sequences
+    public static List<String> findRepeatedDnaSequences_Br(String s) {
+        List<String> result = new ArrayList<>();
+        int n = s.length();
+        Set<String> added = new HashSet<>();
+
+        if (n < 10) return result;
+
+        for (int i = 0; i <= n - 10; i++) {
+            String sub1 = s.substring(i, i + 10);
+
+            for (int j = i + 1; j <= n - 10; j++) {
+                String sub2 = s.substring(j, j + 10);
+
+                if (sub1.equals(sub2) && !added.contains(sub1)) {
+                    result.add(sub1);
+                    added.add(sub1);
+                    break;
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static List<String> findRepeatedDnaSequences_O(String s) {
+        int len = 10;
+        int n = s.length();
+
+        List<String> ans = new ArrayList<>();
+
+        if(n < len) return ans;
+
+        Set<String> seen = new HashSet<>();
+        Set<String> repeated = new HashSet<>();
+
+        for(int i = 0 ; i <= n - len ; i++){
+            String sub = s.substring(i , i + len);
+
+            if(seen.contains(sub)){
+                repeated.add(sub);
+            }
+            else seen.add(sub);
+        }
+
+        ans.addAll(repeated);
+        
+        return ans;
+    }
+
+    public static List<String> findRepeatedDnaSequences_Bitwise(String s) {
+        List<String> result = new ArrayList<>();
+        int n = s.length();
+        if (n < 10) return result;
+
+        Map<Character, Integer> map = new HashMap<>();
+        map.put('A', 0);
+        map.put('C', 1);
+        map.put('G', 2);
+        map.put('T', 3);
+
+        Set<Integer> seen = new HashSet<>();
+        Set<Integer> repeated = new HashSet<>();
+
+        int hash = 0;
+
+        for (int i = 0; i < n; i++) {
+            hash = (hash << 2) | map.get(s.charAt(i));
+            hash &= (1 << 20) - 1; // keep only last 20 bits
+
+            if (i >= 9) {
+                if (seen.contains(hash)) {
+                    repeated.add(hash);
+                } else {
+                    seen.add(hash);
+                }
+            }
+        }
+
+        // Rebuild strings for output
+        for (int code : repeated) {
+            result.add(decode(code));
+        }
+
+        return result;
+    }
+
+    private static String decode(int code) {
+        char[] chars = new char[10];
+        for (int i = 9; i >= 0; i--) {
+            int val = code & 3;
+            chars[i] = "ACGT".charAt(val);
+            code >>= 2;
+        }
+        return new String(chars);
+    }
+
+    
 
 
     public static void main(String[] args) {
