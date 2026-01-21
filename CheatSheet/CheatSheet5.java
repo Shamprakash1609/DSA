@@ -739,7 +739,7 @@ public class CheatSheet5 {
     } 
     
     // Repeated Substring Pattern
-    public static boolean repeatedSubstringPattern_Br(String s) {
+    public static boolean repeatedSubstringPattern_Br(String s){
         /*
             Intuition:
             If a string is made by repeating a smaller substring, that substring
@@ -806,8 +806,104 @@ public class CheatSheet5 {
         return strstr.substring(1 , strstr.length() - 1).contains(s);
     }
 
-    
+    // Next Greater Element III
+    public static int nextGreaterElement(int n) {
+        int og = n;
 
+        List<Integer> digits = new ArrayList<>();
+
+        while(og != 0){
+            digits.add(og % 10);
+            og /= 10;
+        }
+
+        Collections.reverse(digits);
+
+        int len = digits.size();
+
+        int idx = -1;
+
+        for(int i = len - 2; i >= 0 ; i--){
+            if(digits.get(i + 1) > digits.get(i)){
+                idx = i;
+                break;
+            }
+        }
+
+        if(idx == -1) return -1;
+
+        for(int i = len - 1 ; i >= idx ; i--){
+            if(digits.get(i) > digits.get(idx)){
+                int temp = digits.get(idx);
+                digits.set(idx ,  digits.get(i));
+                digits.set(i , temp );
+                break;
+            }
+        }
+
+        int start = idx + 1 , end = len - 1;
+
+        while(start < end){
+            int temp = digits.get(end);
+            digits.set(end , digits.get(start));
+            digits.set(start , temp);
+            start++;
+            end--;
+        }
+
+        long num = 0;
+        for (int d : digits) {
+            num = num * 10 + d;
+            if (num > Integer.MAX_VALUE) return -1;
+        }
+        return (int) num;
+    }
+
+    // Maximum Number of Removable Characters
+    public static int maximumRemovals(String s, String p, int[] removable) {
+        
+        int low = 0 , high = removable.length;
+
+        int ans = 0;
+
+        while(low <= high){
+            int mid = low + (high - low) / 2;
+
+            if(isValid(s , p , removable , mid)){
+                ans = mid;
+                low = mid + 1;
+            }
+            else{
+                high = mid - 1;
+            }
+        }
+
+        return ans;
+    }
+
+    private static boolean isValid(String s , String p , int[] removable , int k){
+        int n = s.length();
+        int m = p.length();
+
+        boolean removed[] = new boolean[n];
+
+        for(int i = 0 ; i < k ; i++){
+            removed[removable[i]] = true;
+        }
+
+       int i = 0 , j = 0;
+
+        while(i < n && j < m){
+            if(removed[i]) i++;
+            else if(s.charAt(i) == p.charAt(j)){
+                i++;
+                j++;
+            }
+            else i++;
+        }
+
+        return (j == m);
+    }
 
 
 
