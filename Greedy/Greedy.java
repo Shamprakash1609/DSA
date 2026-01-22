@@ -187,7 +187,6 @@ public class Greedy {
         
     } 
 
-    
     // Valid paranthesis 
     public static  boolean checkValidString(String s) {
         int n = s.length();

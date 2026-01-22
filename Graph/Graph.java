@@ -425,9 +425,9 @@ public class Graph {
        
        ArrayList<ArrayList<Integer>> adjLs = new ArrayList<>();
        
-       for(int i = 0 ; i<V ; i++){
+        for(int i = 0 ; i<V ; i++){
            adjLs.add(new ArrayList<Integer>());
-       }
+        }
        
        for(int [] edge : edges){
            int u = edge[0];
@@ -440,12 +440,12 @@ public class Graph {
        
        int vis[] = new int[V];
        
-       for(int i = 0 ; i < V ; i++){
+        for(int i = 0 ; i < V ; i++){
            if(vis[i] == 0){
             //    if(checkForCycleB(i , V , adjLs , vis)) return true;
                if(checkForCycleD(i ,-1 ,V , adjLs , vis)) return true;
            }
-       }
+        }
        
        return false;
         
@@ -1076,7 +1076,6 @@ public class Graph {
             
             adjLs.get(u).add(v);
         }
-
         
         int inDeg[] = new int[V];
         
@@ -1112,6 +1111,7 @@ public class Graph {
         
     }
 
+    // Detect Cycle in Directed Graph Using BFS
     public static  boolean isCyclic_Khan_B(int V, int[][] edges) {
         ArrayList<ArrayList<Integer>> adjLs = new ArrayList<>();
         
