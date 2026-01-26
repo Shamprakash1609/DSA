@@ -19,7 +19,7 @@ public class Graph2 {
      * - Does not work correctly with negative edge weights.
      * - Can be used for both directed and undirected graphs.
      * - Returns the shortest distance from the source to every other node.
-     */
+    */
     
     public static int[] dijkstra(int V, int[][] edges, int src) {
         // TC : O(E log N)
@@ -224,7 +224,7 @@ public class Graph2 {
 
         int vis [][] = new int[n][m];
 
-        int[][] directions = {{-1,-1} , {-1,0} , {-1,1} , {0,1} , {1,1} , {1,0} , {1,-1} , {0 , -1}};
+        int[][] directions = {{-1,-1} , {-1,0} , {-1,1} , {0,1} , {1,1} , {1,0} , {1,-1} , {0,-1}};
 
         if(grid[0][0] == 1 || grid[n-1][m-1] == 1) return -1;
 
