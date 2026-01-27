@@ -907,6 +907,13 @@ public class CheatSheet5 {
 
     // Swap Adjacent in LR String
     public static boolean canTransform(String start, String end) {
+        /*
+        Initial mistake: I tried validating local adjacent swaps ("XL→LX", "RX→XR"),
+        but missed the global invariants: relative order of L/R and movement direction constraints.
+
+        Correct idea: Skip X’s, match L/R in order, and ensure L never moves right and R never moves left.
+        */
+
         int n = start.length();
         
         int i = 0 , j = 0;
@@ -932,6 +939,7 @@ public class CheatSheet5 {
 
         return true;
     }
+
 
 
     public static void main(String[] args) {
@@ -1028,6 +1036,22 @@ public class CheatSheet5 {
 
         // Sentence Similarity III - Two Pointer approach
         System.out.println("Sentences similar (TP): " + areSentencesSimilar_TP("Eating is fun", "Eating is fun"));
+
+        // Repeated String Match
+        System.out.println("Repeated string match: " + repeatedStringMatch_Br("ab", "aaab"));
+
+        // Repeated Substring Pattern
+        System.out.println("Repeated substring pattern: " + repeatedSubstringPattern_O("abab"));
+
+        // Next Greater Element III
+        System.out.println("Next greater element: " + nextGreaterElement(12));
+
+        // Maximum Number of Removable Characters
+        int[] removable = {0, 1, 2, 3, 4, 5};
+        System.out.println("Maximum removals: " + maximumRemovals("ometedlincoln", "olln", removable));
+
+        // Swap Adjacent in LR String
+        System.out.println("Can transform: " + canTransform("XLLR", "LXLR"));
 
     }
 }
