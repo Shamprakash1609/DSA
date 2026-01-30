@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Stack;
 
 public class CheatSheet5 {
     // Ugly number
@@ -940,6 +941,127 @@ public class CheatSheet5 {
         return true;
     }
 
+    // Minimum Length of String After Deleting Similar Ends
+    public static int minimumLength(String s) {
+        int n = s.length();
+
+        if(n == 1) return 1;
+
+        int i = 0 , j = n - 1;
+
+        while(i < j){
+            char pre = s.charAt(i);
+            char suf = s.charAt(j);
+
+            if(pre == suf){
+                while(i + 1 < n && s.charAt(i + 1) == pre)i++;
+                while(j - 1 >= 0 && s.charAt(j - 1) == suf)j--;
+
+                if(i + 1 < n){
+                    i++;
+                    pre = s.charAt(i);
+                }
+                if(j - 1 >= 0){
+                    j--;
+                    suf = s.charAt(j);
+                }
+            }
+            else return (j - i + 1);
+        }
+
+        return (i == j) ? 1 : 0; 
+    }
+
+    // Multiply Strings
+    public static String multiply(String num1, String num2) {
+        int n = num1.length();
+        int m = num2.length();
+
+        if(m == 0 || n == 0 || "0".equals(num1) || "0".equals(num2)){
+            return "0";
+        }
+        if("1".equals(num1)){
+            return num2;
+        }
+
+        if("1".equals(num2)){
+            return num1;
+        }
+
+        int res[] = new int[n + m];
+
+        for(int i = n - 1 ; i >= 0 ; i--){
+            for(int j = m - 1 ; j >= 0 ; j--){
+                int product = (num1.charAt(i) - '0') * (num2.charAt(j) - '0');
+                product += res[i + j + 1];
+
+                res[i + j + 1] = product % 10;
+                res[i + j] += product / 10;
+            }
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        for(int r : res){
+            if(sb.length() == 0 && r == 0) continue;
+            sb.append(r);
+        }
+
+        return sb.toString();
+    }
+
+    //  Basic Calculator II
+    public static int calculate(String s) {
+        int n = s.length();
+        Stack<Integer> st = new Stack<>();
+
+        char prevSign = '+';
+        int num = 0;
+
+        for(int i = 0 ; i < n ; i++){
+            char ch = s.charAt(i);
+
+            if(Character.isDigit(ch)){
+                num = num * 10 + (int)(ch - '0');
+            }
+
+            if(isOperator(ch) || i == n - 1){
+                if(prevSign == '+'){
+                    st.push(num);
+                }
+                else if(prevSign == '-'){
+                    st.push(-num);
+                }
+                else if(prevSign == '*'){
+                    int top = st.pop();
+                    st.push(top * num);
+                }
+                else if(prevSign == '/'){
+                    int top = st.pop();
+                    st.push(top / num);
+                }
+                
+                num = 0;
+                prevSign = ch;
+            }
+        }
+
+        int ans = 0;
+
+        while(!st.isEmpty()){
+            ans += st.pop();
+        }
+
+        return ans;
+    }
+
+    private static boolean isOperator(char op){
+        return op == '+' || op == '-' || op == '*' || op == '/';
+    }
+
+
+
+
 
 
     public static void main(String[] args) {
@@ -1052,6 +1174,15 @@ public class CheatSheet5 {
 
         // Swap Adjacent in LR String
         System.out.println("Can transform: " + canTransform("XLLR", "LXLR"));
+
+        // Minimum Length of String After Deleting Similar Ends
+        System.out.println("Minimum length: " + minimumLength("ca"));
+
+        // Multiply Strings
+        System.out.println("Multiply strings: " + multiply("123", "456"));
+
+        // Basic Calculator II
+        System.out.println("Calculate: " + calculate("3+2*2"));
 
     }
 }
