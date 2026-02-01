@@ -1059,8 +1059,100 @@ public class CheatSheet5 {
         return op == '+' || op == '-' || op == '*' || op == '/';
     }
 
+    // Count Number of Homogenous Substrings
+    public static int countHomogenous(String s) {
+        int n = s.length();
 
+        if(n == 1) return 1;
 
+        int mod = (int) (1e9 + 7); 
+
+        char ch = s.charAt(0);
+        long chCnt = 1;
+        long totHomo = 1;
+        for(int i = 1 ; i <n ; i++){
+            if(s.charAt(i) == ch){
+                chCnt++;
+                totHomo = (totHomo + chCnt) % mod;
+            }
+            else{
+                ch = s.charAt(i);
+                chCnt = 1;
+                totHomo = (totHomo + chCnt) % mod;
+            }
+        }
+
+        return (int) totHomo;
+    } 
+
+    // Get Equal Substrings Within Budget
+    public static  int equalSubstring(String s, String t, int maxCost) {
+        /*
+            * a–z → 97–122
+            * A–Z → 65–90
+            * 0–9 → 48–57
+        */
+        int n = s.length();
+
+        int l = 0 , r = 0;
+        int cost = 0;
+
+        int maxLen = 0;
+
+        while(r < n){
+            cost += Math.abs((int) (s.charAt(r) - t.charAt(r)));
+
+            if(cost > maxCost){
+                cost -= Math.abs((int) (s.charAt(l) - t.charAt(l)));
+                l++;
+            }
+
+            if(cost <= maxCost){
+                maxLen = Math.max(r - l + 1 , maxLen);
+            }
+
+            r++;
+        }
+
+        return maxLen;
+    }
+
+    public static int equalSubstring_O(String s, String t, int maxCost) {
+        /*
+            * a–z → 97–122
+            * A–Z → 65–90
+            * 0–9 → 48–57
+        */
+        int n = s.length();
+
+        int costArr[] = new int[n];
+
+        for(int i = 0; i < n ; i++){
+            costArr[i] = Math.abs((int) (s.charAt(i) - t.charAt(i)));
+        }
+
+        int l = 0 , r = 0;
+        int currCst = 0;
+
+        int maxLen = 0;
+
+        while(r < n){
+            currCst += costArr[r];
+
+            if( currCst  > maxCost){
+                currCst  -= costArr[l];
+                l++;
+            }
+
+            if(currCst  <= maxCost){
+                maxLen = Math.max(r - l + 1 , maxLen);
+            }
+
+            r++;
+        }
+
+        return maxLen;
+    }
 
 
 
@@ -1183,6 +1275,12 @@ public class CheatSheet5 {
 
         // Basic Calculator II
         System.out.println("Calculate: " + calculate("3+2*2"));
+
+        // Count Number of Homogenous Substrings
+        System.out.println("Count homogenous: " + countHomogenous("aaabbbcccc"));
+
+        // Get Equal Substrings Within Budget
+        System.out.println("Equal substring: " + equalSubstring("abcd", "bcda", 3));
 
     }
 }
