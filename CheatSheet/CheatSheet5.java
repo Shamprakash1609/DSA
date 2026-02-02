@@ -1154,7 +1154,97 @@ public class CheatSheet5 {
         return maxLen;
     }
 
+    // Longest Cycle in a Graph
+    public static int longestCycle_My(int[] edges) {
+        int n = edges.length;
 
+        int vis[] = new int[n];
+        int pathVis[] = new int[n];
+        int parent[] = new int[n];
+
+        int cycle[] = new int[2]; // cycle[0] - start , cycle[1] - end
+
+        int maxLen = -1;
+
+        for(int i = 0 ; i < n ; i++){
+            if(vis[i] == 0){
+                if (dfs(edges, vis, pathVis, parent, i, -1, cycle)) {
+                    int len = 1; 
+                    int curr = cycle[1]; // The node we are currently at
+                    
+                    while (curr != cycle[0] && curr != -1) {
+                        len++;
+                        curr = parent[curr];
+                    }
+    
+                    maxLen = Math.max(maxLen, len);
+                }
+            }
+        }
+
+        return maxLen;
+    }
+
+    private static boolean dfs(int[] edges , int vis[] , int pathVis[] , int parent[] ,int node , int par , int cycle[]){
+        vis[node] = 1;
+        pathVis[node] = 1;
+        parent[node] = par;
+
+        int next = edges[node];
+
+        if(next != -1){
+            if(vis[next] == 0){
+                if(dfs(edges , vis , pathVis , parent , next , node, cycle) == true) return true;
+            }
+            else if(pathVis[next] == 1){
+                cycle[0] = next;
+                cycle[1] = node;
+                return true;
+            }
+        }
+
+        pathVis[node] = 0;
+        return false;
+    }
+
+    public static int longestCycle(int[] edges) {
+        int n = edges.length;
+
+        int vis[] = new int[n];
+        int dist[] = new int[n];
+
+        int maxLen = -1;
+
+        for(int i = 0 ; i < n ; i++){
+            if(vis[i] == 0){
+                maxLen = Math.max(dfsCycleDist(edges , vis , dist , i , 1) , maxLen);
+            } 
+        }
+
+        return maxLen;
+    }
+
+    private static int dfsCycleDist(int edges[] , int vis[] , int dist[] , int node , int d ){
+        vis[node] = 1;
+        dist[node] = d;
+
+        int next = edges[node];
+        int res = -1;
+
+        if(next != -1){
+            if(vis[next] == 0){
+                res = dfsCycleDist(edges , vis , dist , next , d + 1);
+            }
+            else if(dist[next] > 0){
+
+                res = d - dist[next] + 1;
+            }
+        }
+
+        dist[node] = 0;
+
+        return res;
+    }
 
     public static void main(String[] args) {
         // Ugly number
@@ -1281,6 +1371,11 @@ public class CheatSheet5 {
 
         // Get Equal Substrings Within Budget
         System.out.println("Equal substring: " + equalSubstring("abcd", "bcda", 3));
+
+        // Longest Cycle in a Graph
+        int[] edges = {3, 3, 4, 2, 3};
+        // int[] edges = {59,83,46,18,45,52,-1,-1,46,-1,75,86,89,-1,-1,-1,-1,7,-1,34,-1,-1,-1,34,82,-1,75,30,34,-1,87,7,35,-1,-1,54,72,-1,-1,-1,29,56,-1,55,32,44,62,-1,80,-1,-1,15,81,-1,32,-1,-1,53,81,40,81,72,68,-1,-1,-1,87,73,-1,-1,55,-1,-1,-1,-1,-1,53,89,38,25,16,4,71,7,33,-1,42,34,29,33,1,23,-1};
+        System.out.println("Longest cycle: " + longestCycle(edges));
 
     }
 }
